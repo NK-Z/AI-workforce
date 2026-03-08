@@ -24,13 +24,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare frontend
+        run: |
+          mkdir -p _site
+          cp -r index.html login.html css js assets manifest.json sw.js .nojekyll _site/ 2>/dev/null || true
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment

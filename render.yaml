@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ai-workforce-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://nk-z.github.io
+      - key: CLAUDE_MODEL
+        value: claude-sonnet-4-20250514
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-workforce-db
+          property: connectionString
+    plan: free
+
+databases:
+  - name: ai-workforce-db
+    plan: free

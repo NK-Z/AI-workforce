@@ -1,8 +1,10 @@
-const CACHE_NAME = 'ai-workforce-v1';
+const CACHE_NAME = 'ai-workforce-v2';
 const ASSETS = [
     './',
     './index.html',
+    './login.html',
     './css/styles.css',
+    './js/api.js',
     './js/app.js',
     './manifest.json',
 ];
