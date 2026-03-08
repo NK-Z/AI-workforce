@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workforce — Your Virtual Office</title>
+    <meta name="description" content="Manage your AI agents in an interactive virtual office. Hire, assign tasks, chat, and monitor your AI workforce from a beautiful dashboard.">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="AI Workforce — Your Virtual Office">
+    <meta property="og:description" content="Manage your AI agents in an interactive virtual office environment.">
+    <meta property="og:type" content="website">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="assets/icon-192.svg">
+    <link rel="apple-touch-icon" href="assets/icon-192.svg">
+
+    <!-- Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="10" fill="url(#brandGrad)"/>
+                    <path d="M12 20L18 14L24 20L18 26Z" fill="white" opacity="0.9"/>
+                    <path d="M18 14L24 20L30 14L24 8Z" fill="white" opacity="0.6"/>
+                    <defs><linearGradient id="brandGrad" x1="0" y1="0" x2="40" y2="40">
+                        <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+                    </linearGradient></defs>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">AI Workforce</span>
+                <span class="brand-sub">Virtual Office</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="office" onclick="navigateTo('office')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 22V12h6v10"/></svg>
+                <span>Office Floor</span>
+            </a>
+            <a href="#" class="nav-item" data-page="agents" onclick="navigateTo('agents')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                <span>Agents</span>
+            </a>
+            <a href="#" class="nav-item" data-page="tasks" onclick="navigateTo('tasks')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                <span>Tasks</span>
+            </a>
+            <a href="#" class="nav-item" data-page="chat" onclick="navigateTo('chat')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <span>Chat</span>
+            </a>
+            <a href="#" class="nav-item" data-page="analytics" onclick="navigateTo('analytics')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <span>Analytics</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <span>Settings</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="topbar-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Search agents, tasks, or anything..." id="globalSearch">
+            </div>
+            <div class="topbar-actions">
+                <button class="topbar-btn notification-btn" onclick="toggleNotifications()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span class="notification-badge" id="notifBadge">3</span>
+                </button>
+                <div class="user-avatar" onclick="toggleUserMenu()">
+                    <span>N</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Container -->
+        <div class="page-container" id="pageContainer">
+            <!-- Dashboard Page -->
+            <section class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <div>
+                        <h1>Welcome back, Nasser</h1>
+                        <p class="page-subtitle">Here's what's happening in your virtual office today.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('hireAgent')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Hire New Agent
+                    </button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalAgents">0</span>
+                            <span class="stat-label">Total Agents</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/></svg>
+                            <span>Active</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="completedTasks">0</span>
+                            <span class="stat-label">Tasks Completed</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/></svg>
+                            <span>+12%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="pendingTasks">0</span>
+                            <span class="stat-label">Pending Tasks</span>
+                        </div>
+                        <div class="stat-trend neutral">
+                            <span>In Progress</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="efficiency">0%</span>
+                            <span class="stat-label">Office Efficiency</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/></svg>
+                            <span>+5%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Content Grid -->
+                <div class="dashboard-grid">
+                    <!-- Active Agents Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Active Agents</h2>
+                            <a href="#" onclick="navigateTo('agents')" class="panel-link">View All</a>
+                        </div>
+                        <div class="agent-list" id="dashboardAgentList">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Recent Activity</h2>
+                            <a href="#" class="panel-link">View All</a>
+                        </div>
+                        <div class="activity-feed" id="activityFeed">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Task Overview -->
+                    <div class="panel full-width">
+                        <div class="panel-header">
+                            <h2>Task Board</h2>
+                            <button class="btn btn-secondary btn-sm" onclick="openModal('newTask')">+ New Task</button>
+                        </div>
+                        <div class="task-board" id="dashboardTaskBoard">
+                            <div class="task-column">
+                                <div class="task-column-header">
+                                    <span class="task-status-dot pending"></span>
+                                    <span>To Do</span>
+                                    <span class="task-count" id="todoCount">0</span>
+                                </div>
+                                <div class="task-list" id="todoTasks"></div>
+                            </div>
+                            <div class="task-column">
+                                <div class="task-column-header">
+                                    <span class="task-status-dot in-progress"></span>
+                                    <span>In Progress</span>
+                                    <span class="task-count" id="progressCount">0</span>
+                                </div>
+                                <div class="task-list" id="progressTasks"></div>
+                            </div>
+                            <div class="task-column">
+                                <div class="task-column-header">
+                                    <span class="task-status-dot completed"></span>
+                                    <span>Completed</span>
+                                    <span class="task-count" id="completedCount">0</span>
+                                </div>
+                                <div class="task-list" id="completedTasksList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Office Floor Page -->
+            <section class="page" id="page-office">
+                <div class="page-header">
+                    <div>
+                        <h1>Office Floor</h1>
+                        <p class="page-subtitle">Interactive floor plan of your virtual office. Click any desk or room to interact.</p>
+                    </div>
+                    <div class="floor-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span> Active</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Idle</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#5c6380"></span> Offline</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:var(--border-color)"></span> Empty</span>
+                    </div>
+                </div>
+                <div class="floor-plan-wrapper">
+                    <div class="floor-plan" id="officeFloor">
+                        <!-- Rendered by JS as a proper 2D office -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agents Page -->
+            <section class="page" id="page-agents">
+                <div class="page-header">
+                    <div>
+                        <h1>Agent Management</h1>
+                        <p class="page-subtitle">Hire, configure, and manage your AI workforce.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('hireAgent')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Hire New Agent
+                    </button>
+                </div>
+                <div class="agents-filter-bar">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterAgents('all')">All</button>
+                        <button class="filter-tab" onclick="filterAgents('active')">Active</button>
+                        <button class="filter-tab" onclick="filterAgents('idle')">Idle</button>
+                        <button class="filter-tab" onclick="filterAgents('offline')">Offline</button>
+                    </div>
+                </div>
+                <div class="agents-grid" id="agentsGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Tasks Page -->
+            <section class="page" id="page-tasks">
+                <div class="page-header">
+                    <div>
+                        <h1>Task Management</h1>
+                        <p class="page-subtitle">Assign and track tasks across your AI workforce.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('newTask')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Create Task
+                    </button>
+                </div>
+                <div class="task-board full-page" id="fullTaskBoard">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Chat Page -->
+            <section class="page" id="page-chat">
+                <div class="chat-layout">
+                    <div class="chat-sidebar">
+                        <div class="chat-sidebar-header">
+                            <h3>Conversations</h3>
+                        </div>
+                        <div class="chat-contacts" id="chatContacts">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <div class="chat-main">
+                        <div class="chat-header" id="chatHeader">
+                            <div class="chat-header-info">
+                                <div class="chat-avatar">
+                                    <span>?</span>
+                                </div>
+                                <div>
+                                    <h3>Select an agent</h3>
+                                    <span class="chat-status">Start a conversation</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-empty">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                <p>Select an agent to start chatting</p>
+                            </div>
+                        </div>
+                        <div class="chat-input-area" id="chatInputArea" style="display:none">
+                            <input type="text" placeholder="Type a message to your agent..." id="chatInput" onkeypress="handleChatKeypress(event)">
+                            <button class="btn btn-primary" onclick="sendChatMessage()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Page -->
+            <section class="page" id="page-analytics">
+                <div class="page-header">
+                    <div>
+                        <h1>Analytics</h1>
+                        <p class="page-subtitle">Performance metrics and insights for your AI workforce.</p>
+                    </div>
+                </div>
+                <div class="analytics-grid" id="analyticsContent">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section class="page" id="page-settings">
+                <div class="page-header">
+                    <div>
+                        <h1>Settings</h1>
+                        <p class="page-subtitle">Configure your virtual office preferences.</p>
+                    </div>
+                </div>
+                <div class="settings-content" id="settingsContent">
+                    <div class="settings-section">
+                        <h3>Office Configuration</h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Office Name</span>
+                                <span class="setting-desc">Your virtual office display name</span>
+                            </div>
+                            <input type="text" class="setting-input" value="Nasser's AI Office" id="officeName">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Dark Mode</span>
+                                <span class="setting-desc">Toggle dark theme for the interface</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Notifications</span>
+                                <span class="setting-desc">Receive alerts for agent activities</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Auto-assign Tasks</span>
+                                <span class="setting-desc">Automatically assign tasks to idle agents</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <!-- Hire Agent Modal -->
+            <div class="modal-content" id="modal-hireAgent">
+                <div class="modal-header">
+                    <h2>Hire New Agent</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Agent Name</label>
+                        <input type="text" id="agentName" placeholder="e.g., Alex, Marketing Pro...">
+                    </div>
+                    <div class="form-group">
+                        <label>Role / Department</label>
+                        <select id="agentRole">
+                            <option value="developer">Software Developer</option>
+                            <option value="designer">UI/UX Designer</option>
+                            <option value="marketing">Marketing Specialist</option>
+                            <option value="analyst">Data Analyst</option>
+                            <option value="writer">Content Writer</option>
+                            <option value="support">Customer Support</option>
+                            <option value="manager">Project Manager</option>
+                            <option value="researcher">Researcher</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Personality Style</label>
+                        <div class="personality-grid">
+                            <label class="personality-option">
+                                <input type="radio" name="personality" value="professional" checked>
+                                <div class="personality-card">
+                                    <span class="personality-icon">💼</span>
+                                    <span>Professional</span>
+                                </div>
+                            </label>
+                            <label class="personality-option">
+                                <input type="radio" name="personality" value="friendly">
+                                <div class="personality-card">
+                                    <span class="personality-icon">😊</span>
+                                    <span>Friendly</span>
+                                </div>
+                            </label>
+                            <label class="personality-option">
+                                <input type="radio" name="personality" value="creative">
+                                <div class="personality-card">
+                                    <span class="personality-icon">🎨</span>
+                                    <span>Creative</span>
+                                </div>
+                            </label>
+                            <label class="personality-option">
+                                <input type="radio" name="personality" value="analytical">
+                                <div class="personality-card">
+                                    <span class="personality-icon">📊</span>
+                                    <span>Analytical</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Skills (comma separated)</label>
+                        <input type="text" id="agentSkills" placeholder="e.g., Python, Data Analysis, Report Writing">
+                    </div>
+                    <div class="form-group">
+                        <label>Avatar Color</label>
+                        <div class="color-picker">
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#6366f1" checked><span style="background:#6366f1"></span></label>
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#10b981"><span style="background:#10b981"></span></label>
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#f59e0b"><span style="background:#f59e0b"></span></label>
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#ef4444"><span style="background:#ef4444"></span></label>
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#ec4899"><span style="background:#ec4899"></span></label>
+                            <label class="color-option"><input type="radio" name="avatarColor" value="#06b6d4"><span style="background:#06b6d4"></span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="hireAgent()">Hire Agent</button>
+                </div>
+            </div>
+
+            <!-- New Task Modal -->
+            <div class="modal-content" id="modal-newTask" style="display:none">
+                <div class="modal-header">
+                    <h2>Create New Task</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Task Title</label>
+                        <input type="text" id="taskTitle" placeholder="e.g., Write blog post about AI trends">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="taskDescription" placeholder="Describe the task in detail..." rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Assign To</label>
+                        <select id="taskAgent">
+                            <option value="">-- Select Agent --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="taskPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="date" id="taskDeadline">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+                </div>
+            </div>
+
+            <!-- Agent Detail Modal -->
+            <div class="modal-content modal-lg" id="modal-agentDetail" style="display:none">
+                <div class="modal-header">
+                    <h2>Agent Profile</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="agentDetailBody">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" onclick="fireAgent()">Terminate Agent</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button class="btn btn-secondary btn-sm" onclick="clearNotifications()">Clear All</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Register Service Worker for PWA / offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
