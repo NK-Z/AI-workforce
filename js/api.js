@@ -6,6 +6,11 @@ const API = (() => {
     // Auto-detect backend URL: localhost in dev, Render in production
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const DEFAULT_API = isLocal ? 'http://localhost:8000' : 'https://ai-workforce-api.onrender.com';
+    // Clear stale localhost URL when running in production
+    const stored = localStorage.getItem('ai_workforce_api_url');
+    if (!isLocal && stored && stored.includes('localhost')) {
+        localStorage.removeItem('ai_workforce_api_url');
+    }
     const BASE = localStorage.getItem('ai_workforce_api_url') || DEFAULT_API;
 
     function getToken() {
