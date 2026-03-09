@@ -516,10 +516,10 @@ function renderTaskDetailBody(task) {
 
         ${isDone && task.result ? `
         <div>
-            <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px; color:var(--success); display:flex; align-items:center; gap:6px;">
+            <div style="font-size:0.85rem; font-weight:600; margin-bottom:10px; color:var(--success); display:flex; align-items:center; gap:6px;">
                 ✅ Completed Work
             </div>
-            <div style="background:var(--bg-tertiary); border:1px solid var(--border-color); border-left:3px solid var(--success); border-radius:8px; padding:14px; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; white-space:pre-wrap; word-break:break-word; max-height:400px; overflow-y:auto;">${escapeHtml(task.result)}</div>
+            <div class="task-result-rendered">${typeof marked !== 'undefined' ? marked.parse(task.result) : escapeHtml(task.result)}</div>
         </div>` : ''}
 
         ${!isDone ? `
