@@ -578,6 +578,21 @@
                     <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 </div>
             </div>
+
+            <!-- Task Detail Modal -->
+            <div class="modal-content modal-lg" id="modal-taskDetail" style="display:none">
+                <div class="modal-header">
+                    <h2>Task Details</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="taskDetailBody">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="modal-footer" id="taskDetailFooter">
+                    <button class="btn btn-danger btn-sm" onclick="deleteCurrentTask()">Delete Task</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 

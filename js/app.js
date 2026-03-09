@@ -19,6 +19,8 @@ const store = {
     user: API.getUser(),
     calendarConnected: false,
     calendarEvents: [],
+    pollingInterval: null,
+    selectedTaskId: null,
 };
 
 // ===== Role Config =====
@@ -107,6 +109,73 @@ async function refreshAnalytics() {
 
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ===== Task Execution Polling =====
+function startPolling() {
+    if (store.pollingInterval) return; // already running
+    store.pollingInterval = setInterval(async () => {
+        const activeTasks = store.tasks.filter(t => t.status === 'in-progress');
+        if (activeTasks.length === 0) return;
+
+        let changed = false;
+        for (const task of activeTasks) {
+            try {
+                const updated = await API.getTask(task.id);
+                const existing = store.tasks.find(t => t.id === updated.id);
+                if (existing) {
+                    const wasInProgress = existing.status === 'in-progress';
+                    const nowDone = updated.status === 'completed';
+                    Object.assign(existing, updated);
+                    changed = true;
+                    if (wasInProgress && nowDone) {
+                        showToast(`✅ ${updated.agent_name || 'Agent'} completed "${updated.title}"`, 'success');
+                        // Push to notifications
+                        store.notifications.unshift({
+                            text: `${updated.agent_name || 'Agent'} completed "${updated.title}"`,
+                            time: 'Just now',
+                            color: '#10b981',
+                        });
+                        updateNotifBadge();
+                    }
+                }
+            } catch (e) {
+                // task might have been deleted — ignore
+            }
+        }
+
+        if (changed) {
+            // Re-render task boards without full reload
+            const activePage = document.querySelector('.page.active');
+            const pageId = activePage?.id?.replace('page-', '');
+            if (pageId === 'tasks') renderTasks();
+            else if (pageId === 'dashboard') renderTaskBoard('dashboardTaskBoard');
+        }
+    }, 4000);
+}
+
+function stopPolling() {
+    if (store.pollingInterval) {
+        clearInterval(store.pollingInterval);
+        store.pollingInterval = null;
+    }
+}
+
+function updateNotifBadge() {
+    const badge = document.getElementById('notifBadge');
+    if (badge) badge.style.display = store.notifications.length > 0 ? 'flex' : 'none';
+    const list = document.getElementById('notificationList');
+    if (list && store.notifications.length > 0) {
+        list.innerHTML = store.notifications.slice(0, 10).map(n => `
+            <div class="activity-item">
+                <div class="activity-dot" style="background: ${n.color || '#6366f1'}"></div>
+                <div class="activity-content">
+                    <div class="activity-text">${n.text}</div>
+                    <div class="activity-time">${n.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
 }
 
 // ===== Dashboard Render =====
@@ -258,7 +327,7 @@ function renderTaskBoard(containerId) {
     const completedTasks = store.tasks.filter(t => t.status === 'completed');
 
     container.innerHTML = `
-        <div class="task-column">
+        <div class="task-column" ondragover="onColumnDragOver(event)" ondrop="onColumnDrop(event, 'todo')">
             <div class="task-column-header">
                 <span class="task-status-dot pending"></span>
                 <span>To Do</span>
@@ -266,7 +335,7 @@ function renderTaskBoard(containerId) {
             </div>
             <div class="task-list">${todoTasks.map(t => renderTaskCard(t)).join('')}</div>
         </div>
-        <div class="task-column">
+        <div class="task-column" ondragover="onColumnDragOver(event)" ondrop="onColumnDrop(event, 'in-progress')">
             <div class="task-column-header">
                 <span class="task-status-dot in-progress"></span>
                 <span>In Progress</span>
@@ -274,7 +343,7 @@ function renderTaskBoard(containerId) {
             </div>
             <div class="task-list">${progressTasks.map(t => renderTaskCard(t)).join('')}</div>
         </div>
-        <div class="task-column">
+        <div class="task-column" ondragover="onColumnDragOver(event)" ondrop="onColumnDrop(event, 'completed')">
             <div class="task-column-header">
                 <span class="task-status-dot completed"></span>
                 <span>Completed</span>
@@ -286,27 +355,214 @@ function renderTaskBoard(containerId) {
 }
 
 function renderTaskCard(task) {
+    const isWorking = task.status === 'in-progress';
+    const isDone = task.status === 'completed';
+    const cardClass = isWorking ? 'working' : isDone ? 'done' : '';
+
+    const progressHtml = isWorking
+        ? `<div class="task-progress-note"><span class="spin">⟳</span>${escapeHtml(task.progress_note || 'Agent is working...')}</div>`
+        : '';
+
+    const resultSummary = isDone && task.result
+        ? `<div class="task-result-preview">✅ Result ready — click to view</div>`
+        : '';
+
     return `
-        <div class="task-card" onclick="cycleTaskStatus('${task.id}', '${task.status}')">
+        <div class="task-card ${cardClass}"
+             draggable="true"
+             ondragstart="onTaskDragStart(event, '${task.id}')"
+             onclick="showTaskDetail('${task.id}')">
             <div class="task-card-title">${task.title}</div>
+            ${task.description ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">${escapeHtml(task.description.slice(0, 80))}${task.description.length > 80 ? '…' : ''}</div>` : ''}
             <div class="task-card-meta">
                 <span class="task-priority ${task.priority}">${task.priority}</span>
                 ${task.agent_name ? `<div class="task-assignee" style="background:${task.agent_color || '#6366f1'}" title="${task.agent_name}">${task.agent_name.charAt(0)}</div>` : ''}
             </div>
+            ${progressHtml}
+            ${resultSummary}
         </div>
     `;
 }
 
-async function cycleTaskStatus(taskId, currentStatus) {
-    const cycle = { 'todo': 'in-progress', 'in-progress': 'completed', 'completed': 'todo' };
-    const newStatus = cycle[currentStatus] || 'todo';
+// ===== Drag and Drop =====
+let draggedTaskId = null;
+
+function onTaskDragStart(event, taskId) {
+    draggedTaskId = taskId;
+    event.dataTransfer.effectAllowed = 'move';
+    event.target.style.opacity = '0.5';
+    event.target.addEventListener('dragend', () => { event.target.style.opacity = ''; }, { once: true });
+}
+
+function onColumnDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    event.currentTarget.classList.add('drag-over');
+    event.currentTarget.addEventListener('dragleave', () => {
+        event.currentTarget.classList.remove('drag-over');
+    }, { once: true });
+}
+
+async function onColumnDrop(event, newStatus) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+    if (!draggedTaskId) return;
+
+    const task = store.tasks.find(t => t.id === draggedTaskId);
+    if (!task || task.status === newStatus) return;
 
     try {
-        await API.updateTask(taskId, { status: newStatus });
-        showToast(`Task moved to "${newStatus.replace('-', ' ')}"`, 'info');
-        // Refresh current view
+        await API.updateTask(draggedTaskId, { status: newStatus });
+        task.status = newStatus;
+        showToast(`Moved to "${newStatus.replace('-', ' ')}"`, 'info');
         const activePage = document.querySelector('.page.active');
-        if (activePage) navigateTo(activePage.id.replace('page-', ''));
+        const pageId = activePage?.id?.replace('page-', '');
+        if (pageId === 'tasks') renderTasks();
+        else if (pageId === 'dashboard') renderTaskBoard('dashboardTaskBoard');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
+    draggedTaskId = null;
+}
+
+// ===== Task Detail Modal =====
+let taskDetailPollInterval = null;
+
+async function showTaskDetail(taskId) {
+    store.selectedTaskId = taskId;
+
+    // Stop any existing poll
+    if (taskDetailPollInterval) {
+        clearInterval(taskDetailPollInterval);
+        taskDetailPollInterval = null;
+    }
+
+    await renderTaskDetailModal(taskId);
+    openModal('taskDetail');
+
+    // If task is in-progress, poll for updates
+    const task = store.tasks.find(t => t.id === taskId);
+    if (task?.status === 'in-progress') {
+        taskDetailPollInterval = setInterval(async () => {
+            const updated = await API.getTask(taskId);
+            const existing = store.tasks.find(t => t.id === taskId);
+            if (existing) Object.assign(existing, updated);
+            renderTaskDetailBody(updated);
+            if (updated.status !== 'in-progress') {
+                clearInterval(taskDetailPollInterval);
+                taskDetailPollInterval = null;
+            }
+        }, 3000);
+    }
+}
+
+async function renderTaskDetailModal(taskId) {
+    const body = document.getElementById('taskDetailBody');
+    body.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Loading...</div>';
+
+    try {
+        const task = await API.getTask(taskId);
+        const existing = store.tasks.find(t => t.id === taskId);
+        if (existing) Object.assign(existing, task);
+        renderTaskDetailBody(task);
+    } catch (e) {
+        body.innerHTML = `<p style="color:var(--danger);">Error: ${e.message}</p>`;
+    }
+}
+
+function renderTaskDetailBody(task) {
+    const body = document.getElementById('taskDetailBody');
+    if (!body) return;
+
+    const isWorking = task.status === 'in-progress';
+    const isDone = task.status === 'completed';
+    const agent = store.agents.find(a => a.id === task.agent_id);
+
+    const statusColors = { 'todo': '#64748b', 'in-progress': '#f59e0b', 'completed': '#10b981' };
+    const statusColor = statusColors[task.status] || '#64748b';
+
+    body.innerHTML = `
+        <div style="margin-bottom: 16px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <h3 style="font-size:1.1rem; font-weight:700; flex:1;">${escapeHtml(task.title)}</h3>
+                <span style="font-size:0.75rem; font-weight:600; padding:3px 10px; border-radius:20px; background:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}55;">
+                    ${task.status.replace('-', ' ').toUpperCase()}
+                </span>
+            </div>
+            ${task.description ? `<p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">${escapeHtml(task.description)}</p>` : ''}
+        </div>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; padding:12px; background:var(--bg-tertiary); border-radius:8px;">
+            <div><span style="font-size:0.72rem; color:var(--text-muted); display:block;">Priority</span>
+                <span class="task-priority ${task.priority}" style="margin-top:4px; display:inline-block;">${task.priority}</span></div>
+            <div><span style="font-size:0.72rem; color:var(--text-muted); display:block;">Assigned to</span>
+                <span style="font-size:0.85rem; font-weight:600;">${agent ? `<span style="display:inline-flex;align-items:center;gap:6px;"><span style="background:${agent.color};color:white;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;">${agent.name.charAt(0)}</span>${agent.name}</span>` : 'Unassigned'}</span></div>
+            ${task.deadline ? `<div><span style="font-size:0.72rem; color:var(--text-muted); display:block;">Deadline</span>
+                <span style="font-size:0.85rem;">${task.deadline}</span></div>` : ''}
+            ${task.started_at ? `<div><span style="font-size:0.72rem; color:var(--text-muted); display:block;">Started</span>
+                <span style="font-size:0.85rem;">${new Date(task.started_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>` : ''}
+            ${task.completed_at ? `<div><span style="font-size:0.72rem; color:var(--text-muted); display:block;">Completed</span>
+                <span style="font-size:0.85rem;">${new Date(task.completed_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>` : ''}
+        </div>
+
+        ${isWorking ? `
+        <div style="padding:14px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; margin-bottom:16px;">
+            <div style="font-size:0.8rem; font-weight:600; color:var(--warning); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                <span class="spin" style="display:inline-block; animation:spin 1s linear infinite;">⟳</span>
+                Agent is working on this task...
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-secondary);" id="liveProgressNote">${escapeHtml(task.progress_note || 'Processing...')}</div>
+        </div>` : ''}
+
+        ${isDone && task.result ? `
+        <div>
+            <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px; color:var(--success); display:flex; align-items:center; gap:6px;">
+                ✅ Completed Work
+            </div>
+            <div style="background:var(--bg-tertiary); border:1px solid var(--border-color); border-left:3px solid var(--success); border-radius:8px; padding:14px; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; white-space:pre-wrap; word-break:break-word; max-height:400px; overflow-y:auto;">${escapeHtml(task.result)}</div>
+        </div>` : ''}
+
+        ${!isDone ? `
+        <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+            ${task.status !== 'completed' ? `<button class="btn btn-primary btn-sm" onclick="manualMoveTask('${task.id}', '${task.status}')">Move to ${task.status === 'todo' ? 'In Progress' : 'Completed'}</button>` : ''}
+        </div>` : ''}
+    `;
+}
+
+async function manualMoveTask(taskId, currentStatus) {
+    const cycle = { 'todo': 'in-progress', 'in-progress': 'completed' };
+    const newStatus = cycle[currentStatus];
+    if (!newStatus) return;
+
+    try {
+        const updated = await API.updateTask(taskId, { status: newStatus });
+        const existing = store.tasks.find(t => t.id === taskId);
+        if (existing) Object.assign(existing, updated);
+        renderTaskDetailBody(updated);
+        showToast(`Moved to "${newStatus.replace('-', ' ')}"`, 'info');
+        const activePage = document.querySelector('.page.active');
+        const pageId = activePage?.id?.replace('page-', '');
+        if (pageId === 'tasks') renderTasks();
+        else if (pageId === 'dashboard') renderTaskBoard('dashboardTaskBoard');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
+}
+
+async function deleteCurrentTask() {
+    if (!store.selectedTaskId) return;
+    const task = store.tasks.find(t => t.id === store.selectedTaskId);
+    if (!confirm(`Delete task "${task?.title}"?`)) return;
+
+    try {
+        await API.deleteTask(store.selectedTaskId);
+        store.tasks = store.tasks.filter(t => t.id !== store.selectedTaskId);
+        closeModal();
+        showToast('Task deleted', 'info');
+        const activePage = document.querySelector('.page.active');
+        const pageId = activePage?.id?.replace('page-', '');
+        if (pageId === 'tasks') renderTasks();
+        else if (pageId === 'dashboard') renderTaskBoard('dashboardTaskBoard');
     } catch (e) {
         showToast(e.message, 'error');
     }
@@ -754,6 +1010,12 @@ function closeModal() {
     document.getElementById('modalOverlay').classList.remove('active');
     store.currentModal = null;
     store.selectedAgentId = null;
+    store.selectedTaskId = null;
+    // Stop task detail polling
+    if (taskDetailPollInterval) {
+        clearInterval(taskDetailPollInterval);
+        taskDetailPollInterval = null;
+    }
 }
 
 // ===== Hire Agent (API) =====
@@ -810,7 +1072,12 @@ async function createTask() {
         document.getElementById('taskTitle').value = '';
         document.getElementById('taskDescription').value = '';
 
-        showToast(`Task "${title}" created!`, 'success');
+        if (agentId) {
+            const agent = store.agents.find(a => a.id === agentId);
+            showToast(`Task assigned to ${agent?.name || 'agent'} — they're on it now!`, 'success');
+        } else {
+            showToast(`Task "${title}" created!`, 'success');
+        }
         const activePage = document.querySelector('.page.active');
         if (activePage) navigateTo(activePage.id.replace('page-', ''));
     } catch (e) {
@@ -998,6 +1265,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Notification badge
     document.getElementById('notifBadge').style.display = 'none';
     document.getElementById('notificationList').innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No notifications</div>';
+
+    // Start polling for in-progress tasks
+    startPolling();
 
     // Check calendar param from redirect
     const params = new URLSearchParams(window.location.search);

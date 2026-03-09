@@ -3,8 +3,10 @@
    ============================================ */
 
 const API = (() => {
-    // Backend URL — change to your Render deployment URL in production
-    const BASE = localStorage.getItem('ai_workforce_api_url') || 'http://localhost:8000';
+    // Auto-detect backend URL: localhost in dev, Render in production
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const DEFAULT_API = isLocal ? 'http://localhost:8000' : 'https://ai-workforce-api.onrender.com';
+    const BASE = localStorage.getItem('ai_workforce_api_url') || DEFAULT_API;
 
     function getToken() {
         return localStorage.getItem('ai_workforce_token');
@@ -125,6 +127,10 @@ const API = (() => {
         return await request('POST', '/tasks/', data);
     }
 
+    async function getTask(id) {
+        return await request('GET', `/tasks/${id}`);
+    }
+
     async function updateTask(id, data) {
         return await request('PATCH', `/tasks/${id}`, data);
     }
@@ -173,7 +179,7 @@ const API = (() => {
         isLoggedIn, getToken, getUser, logout,
         register, login, getMe,
         getAgents, createAgent, getAgent, updateAgent, deleteAgent,
-        getTasks, createTask, updateTask, deleteTask,
+        getTasks, getTask, createTask, updateTask, deleteTask,
         getChatHistory, sendChat,
         getCalendarAuthUrl, getCalendarEvents, getCalendarStatus, disconnectCalendar,
         setApiUrl, getApiUrl,

@@ -669,6 +669,91 @@ input, select, textarea, button { font-family: inherit; }
     color: white;
 }
 
+/* ===== Drag and Drop ===== */
+.task-column.drag-over {
+    background: rgba(99,102,241,0.06);
+    border-radius: var(--radius-sm);
+    outline: 2px dashed var(--accent-primary);
+}
+
+.task-card[draggable="true"] {
+    cursor: grab;
+}
+
+.task-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.task-result-preview {
+    font-size: 0.72rem;
+    color: var(--success);
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* ===== Task Execution States ===== */
+.task-card.working {
+    border-color: var(--warning);
+    background: linear-gradient(135deg, var(--bg-card), rgba(245,158,11,0.05));
+    animation: taskPulse 2s ease-in-out infinite;
+}
+
+@keyframes taskPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.2); }
+    50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+}
+
+.task-card.done {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--bg-card), rgba(16,185,129,0.05));
+}
+
+.task-progress-note {
+    font-size: 0.75rem;
+    color: var(--warning);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.task-progress-note .spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.task-result {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    border-left: 3px solid var(--success);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.task-result-toggle {
+    font-size: 0.72rem;
+    color: var(--success);
+    cursor: pointer;
+    margin-top: 6px;
+    display: inline-block;
+    font-weight: 600;
+}
+
+.task-result-toggle:hover {
+    text-decoration: underline;
+}
+
 /* ===== Agents Grid ===== */
 .agents-filter-bar {
     margin-bottom: 20px;
@@ -1116,6 +1201,7 @@ input, select, textarea, button { font-family: inherit; }
     display: grid;
     grid-template-columns: 280px 1fr;
     height: calc(100vh - var(--topbar-height) - 56px);
+    min-height: 400px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -1126,6 +1212,8 @@ input, select, textarea, button { font-family: inherit; }
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .chat-sidebar-header {
@@ -1184,6 +1272,8 @@ input, select, textarea, button { font-family: inherit; }
 .chat-main {
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Critical: prevents flex child from overflowing */
+    overflow: hidden;
 }
 
 .chat-header {
@@ -1215,6 +1305,7 @@ input, select, textarea, button { font-family: inherit; }
 
 .chat-messages {
     flex: 1;
+    min-height: 0; /* Critical: allows shrinking so input stays visible */
     overflow-y: auto;
     padding: 20px;
     display: flex;

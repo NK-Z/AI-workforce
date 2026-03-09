@@ -90,6 +90,10 @@ class TaskResponse(BaseModel):
     created_at: datetime
     agent_name: Optional[str] = None
     agent_color: Optional[str] = None
+    result: Optional[str] = None
+    progress_note: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
 
 # ===== Chat =====

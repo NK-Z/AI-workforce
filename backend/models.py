@@ -43,6 +43,10 @@ class Task(Base):
     priority = Column(String, default="medium")
     status = Column(String, default="todo")
     deadline = Column(Date, nullable=True)
+    result = Column(Text, default="")
+    progress_note = Column(Text, default="")
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -52,7 +56,7 @@ class ChatMessage(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     agent_id = Column(String, ForeignKey("agents.id"), nullable=False, index=True)
-    role = Column(String, nullable=False)  # 'user' or 'assistant'
+    role = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
